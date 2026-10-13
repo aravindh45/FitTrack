@@ -29,7 +29,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -73,91 +72,88 @@ fun SettingsScreen(
     LaunchedEffect(Unit) { viewModel.loadKeyForCurrentProvider() }
     LaunchedEffect(healthPermissionRefreshTrigger) { viewModel.refreshHealthConnectStatus() }
 
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            profile?.let { EditProfileRow(it, onEditProfileClick) }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        profile?.let { EditProfileRow(it, onEditProfileClick) }
 
-            ConnectHealthRow(
-                isAvailable = viewModel.healthConnectManager.isAvailable(),
-                isGranted = healthConnectGranted,
-                onClick = onConnectHealthClick
-            )
+        ConnectHealthRow(
+            isAvailable = viewModel.healthConnectManager.isAvailable(),
+            isGranted = healthConnectGranted,
+            onClick = onConnectHealthClick
+        )
 
-            profile?.let { CalorieGoalSection(it, viewModel) }
+        profile?.let { CalorieGoalSection(it, viewModel) }
 
-            Text("AI Provider", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(
-                text = "Pick which LLM analyzes your meals. Your API key stays encrypted on this device only.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Text("AI Provider", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Pick which LLM analyzes your meals. Your API key stays encrypted on this device only.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                LlmProviderId.entries.forEach { provider ->
-                    FilterChip(
-                        selected = selectedProvider == provider,
-                        onClick = {
-                            viewModel.selectProvider(provider)
-                            keyVisible = false
-                        },
-                        label = { Text(provider.label, style = MaterialTheme.typography.labelMedium) },
-                        trailingIcon = if (viewModel.hasKeyFor(provider)) {
-                            { Icon(Icons.Filled.CheckCircle, contentDescription = "Key saved", tint = GoogleGreen, modifier = Modifier.size(16.dp)) }
-                        } else null
-                    )
-                }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            LlmProviderId.entries.forEach { provider ->
+                FilterChip(
+                    selected = selectedProvider == provider,
+                    onClick = {
+                        viewModel.selectProvider(provider)
+                        keyVisible = false
+                    },
+                    label = { Text(provider.label, style = MaterialTheme.typography.labelMedium) },
+                    trailingIcon = if (viewModel.hasKeyFor(provider)) {
+                        { Icon(Icons.Filled.CheckCircle, contentDescription = "Key saved", tint = GoogleGreen, modifier = Modifier.size(16.dp)) }
+                    } else null
+                )
             }
-
-            ElevatedCard(
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "${selectedProvider.label} API key",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    OutlinedTextField(
-                        value = viewModel.apiKeyInput,
-                        onValueChange = { viewModel.apiKeyInput = it },
-                        label = { Text("API key") },
-                        singleLine = true,
-                        textStyle = MaterialTheme.typography.bodyMedium,
-                        visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { keyVisible = !keyVisible }) {
-                                Icon(
-                                    imageVector = if (keyVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                    contentDescription = "Toggle key visibility",
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Button(onClick = viewModel::saveApiKey, modifier = Modifier.fillMaxWidth()) {
-                        Text("Save key", style = MaterialTheme.typography.labelLarge)
-                    }
-                    viewModel.saveConfirmation?.let { confirmation ->
-                        Text(confirmation, color = GoogleGreen, style = MaterialTheme.typography.labelMedium)
-                    }
-                }
-            }
-
-            Text(
-                text = "Only one LLM call is made per logged meal - used to estimate nutrition " +
-                    "facts and write your motivational message. Nothing else in the app talks to an LLM.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
+
+        ElevatedCard(
+            colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+        ) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "${selectedProvider.label} API key",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+                OutlinedTextField(
+                    value = viewModel.apiKeyInput,
+                    onValueChange = { viewModel.apiKeyInput = it },
+                    label = { Text("API key") },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                    visualTransformation = if (keyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { keyVisible = !keyVisible }) {
+                            Icon(
+                                imageVector = if (keyVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = "Toggle key visibility",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Button(onClick = viewModel::saveApiKey, modifier = Modifier.fillMaxWidth()) {
+                    Text("Save key", style = MaterialTheme.typography.labelLarge)
+                }
+                viewModel.saveConfirmation?.let { confirmation ->
+                    Text(confirmation, color = GoogleGreen, style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+
+        Text(
+            text = "Only one LLM call is made per logged meal - used to estimate nutrition " +
+                "facts and write your motivational message. Nothing else in the app talks to an LLM.",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 

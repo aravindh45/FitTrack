@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -117,8 +118,19 @@ fun FitTrackNavHost(appContainer: AppContainer) {
     val currentRoute = backStackEntry?.destination?.route
     val showTopBar = currentRoute != Screen.Onboarding.route
     val showBottomBar = showTopBar && currentRoute != Screen.EditProfile.route
+    val focusManager = LocalFocusManager.current
 
+    // Every dock destination - Log included - goes through the SAME popUpTo/singleTop/
+    // restoreState dance, so all four behave as equal "tabs" with no stray back-stack entries
+    // piling up. Log used to bypass this (plain navController.navigate()), and the orphaned
+    // entries that built up from repeated taps were corrupting the OTHER tabs' saved-state
+    // restoration - manifesting as taps on one dock icon landing on a completely different
+    // screen. Also clears any focused text field first (Settings has several) so the tap
+    // actually performs the navigation instead of just dismissing a keyboard - the same
+    // "first tap eaten" issue LogFoodScreen had, just reachable from more places than we'd
+    // originally fixed it in.
     fun navigateTo(route: String) {
+        focusManager.clearFocus()
         navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) { saveState = true }
             launchSingleTop = true
@@ -147,7 +159,7 @@ fun FitTrackNavHost(appContainer: AppContainer) {
                 DockBottomBar(
                     currentRoute = currentRoute,
                     onHomeClick = { navigateTo(Screen.Dashboard.route) },
-                    onLogClick = { navController.navigate(Screen.LogFood.route) },
+                    onLogClick = { navigateTo(Screen.LogFood.route) },
                     onHistoryClick = { navigateTo(Screen.History.route) },
                     onSettingsClick = { navigateTo(Screen.Settings.route) }
                 )
@@ -227,7 +239,7 @@ private fun DockBottomBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp, vertical = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
         Surface(
@@ -235,13 +247,15 @@ private fun DockBottomBar(
             color = MaterialTheme.colorScheme.surfaceContainerHigh,
             tonalElevation = 6.dp,
             shadowElevation = 10.dp,
-            modifier = Modifier.height(64.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .padding(horizontal = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DockIcon(

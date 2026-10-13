@@ -19,7 +19,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,15 +45,13 @@ fun OnboardingScreen(
         viewModel.profileSaved.collect { onProfileSaved() }
     }
 
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(24.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
             Text(
                 text = if (isEditMode) "Update your profile" else "Let's set you up",
                 style = MaterialTheme.typography.headlineMedium,
@@ -162,5 +159,4 @@ fun OnboardingScreen(
                 Text(if (isEditMode) "Save changes" else "Save & continue")
             }
         }
-    }
 }

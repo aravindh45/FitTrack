@@ -1,6 +1,6 @@
 package com.personal.fittrack.ui.common
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -14,7 +14,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -60,8 +62,16 @@ fun CalorieProgressRing(
     // Animate toward the target fraction instead of snapping - a meal landing or a fresh
     // screen load both sweep the ring into place, the same satisfying "fill up" motion
     // Google Fit's rings use, rather than an instant jump cut.
-    val animatedFraction by animateFloatAsState(targetValue = fraction, animationSpec = tween(700), label = "calorieRingFraction")
-    val animatedActiveFraction by animateFloatAsState(targetValue = activeFraction, animationSpec = tween(700), label = "activeRingFraction")
+    // Always starts the sweep from zero on every fresh composition (e.g. navigating back to
+    // Dashboard), rather than animateFloatAsState's default of starting from whatever value
+    // `fraction`/`activeFraction` already happen to be at first composition. That default is
+    // why only the Health-Connect burn ring was visibly animating before - its backing state
+    // genuinely starts at 0 and fills in async, while the consumed ring's Room-backed value
+    // was usually already resolved by first composition, so there was nothing left to animate.
+    val animatedFraction = remember { Animatable(0f) }
+    val animatedActiveFraction = remember { Animatable(0f) }
+    LaunchedEffect(fraction) { animatedFraction.animateTo(fraction, animationSpec = tween(700)) }
+    LaunchedEffect(activeFraction) { animatedActiveFraction.animateTo(activeFraction, animationSpec = tween(700)) }
 
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -82,7 +92,7 @@ fun CalorieProgressRing(
             drawArc(
                 color = ringColor,
                 startAngle = -90f,
-                sweepAngle = 360f * animatedFraction,
+                sweepAngle = 360f * animatedFraction.value,
                 useCenter = false,
                 topLeft = outerTopLeft,
                 size = outerSize,
@@ -108,7 +118,7 @@ fun CalorieProgressRing(
                 drawArc(
                     color = activeColor,
                     startAngle = -90f,
-                    sweepAngle = 360f * animatedActiveFraction,
+                    sweepAngle = 360f * animatedActiveFraction.value,
                     useCenter = false,
                     topLeft = innerTopLeft,
                     size = innerSize,

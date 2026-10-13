@@ -18,7 +18,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,63 +38,60 @@ fun LogFoodScreen(viewModel: LogFoodViewModel) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    Scaffold { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "What did you eat?",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = "Describe it in your own words, e.g. \"2 mini idli and chicken biryani\".",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        OutlinedTextField(
+            value = viewModel.description,
+            onValueChange = { viewModel.description = it },
+            label = { Text("Meal description") },
+            minLines = 2,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Button(
+            onClick = {
+                // Clearing focus/hiding the keyboard here (not just on navigation) matters:
+                // while the description field is still focused, the FIRST tap anywhere else
+                // on screen - including the bottom nav's Home button - is consumed by Android
+                // just dismissing the keyboard, not by the thing you tapped. Without this,
+                // "Home doesn't respond" right after logging a meal, when it's really just
+                // eating your first tap before a second one gets through.
+                focusManager.clearFocus()
+                keyboardController?.hide()
+                viewModel.submit()
+            },
+            enabled = viewModel.uiState !is LogFoodUiState.Loading,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "What did you eat?",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Describe it in your own words, e.g. \"2 mini idli and chicken biryani\".",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Log it")
+        }
 
-            OutlinedTextField(
-                value = viewModel.description,
-                onValueChange = { viewModel.description = it },
-                label = { Text("Meal description") },
-                minLines = 2,
-                modifier = Modifier.fillMaxWidth()
+        when (val state = viewModel.uiState) {
+            LogFoodUiState.Idle -> Unit
+            LogFoodUiState.Loading -> LoadingCard()
+            is LogFoodUiState.Success -> ResultCard(
+                state = state,
+                onUndo = { viewModel.undoLastEntry(state.entry.id) },
+                onDismiss = viewModel::resetToIdle
             )
-
-            Button(
-                onClick = {
-                    // Clearing focus/hiding the keyboard here (not just on navigation) matters:
-                    // while the description field is still focused, the FIRST tap anywhere else
-                    // on screen - including the bottom nav's Home button - is consumed by Android
-                    // just dismissing the keyboard, not by the thing you tapped. Without this,
-                    // "Home doesn't respond" right after logging a meal, when it's really just
-                    // eating your first tap before a second one gets through.
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                    viewModel.submit()
-                },
-                enabled = viewModel.uiState !is LogFoodUiState.Loading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null, modifier = Modifier.height(18.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Log it")
-            }
-
-            when (val state = viewModel.uiState) {
-                LogFoodUiState.Idle -> Unit
-                LogFoodUiState.Loading -> LoadingCard()
-                is LogFoodUiState.Success -> ResultCard(
-                    state = state,
-                    onUndo = { viewModel.undoLastEntry(state.entry.id) },
-                    onDismiss = viewModel::resetToIdle
-                )
-                is LogFoodUiState.Error -> ErrorCard(state.message)
-            }
+            is LogFoodUiState.Error -> ErrorCard(state.message)
         }
     }
 }
