@@ -3,7 +3,12 @@ package com.personal.fittrack.ui.common
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -110,6 +115,21 @@ fun CalorieProgressRing(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (activeCaloriesBurned > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.LocalFireDepartment,
+                            contentDescription = null,
+                            tint = activeColor,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = " $activeCaloriesBurned kcal burned",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = activeColor
+                        )
+                    }
+                }
             }
         }
     }
