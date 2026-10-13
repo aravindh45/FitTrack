@@ -1,5 +1,7 @@
 package com.personal.fittrack.ui.common
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -54,6 +57,12 @@ fun CalorieProgressRing(
     val activeFraction = (activeCaloriesBurned.toFloat() / DEFAULT_ACTIVE_CALORIE_GOAL_KCAL).coerceIn(0f, 1f)
     val activeColor = GoogleBlue
 
+    // Animate toward the target fraction instead of snapping - a meal landing or a fresh
+    // screen load both sweep the ring into place, the same satisfying "fill up" motion
+    // Google Fit's rings use, rather than an instant jump cut.
+    val animatedFraction by animateFloatAsState(targetValue = fraction, animationSpec = tween(700), label = "calorieRingFraction")
+    val animatedActiveFraction by animateFloatAsState(targetValue = activeFraction, animationSpec = tween(700), label = "activeRingFraction")
+
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val outerStroke = 18.dp.toPx()
@@ -73,7 +82,7 @@ fun CalorieProgressRing(
             drawArc(
                 color = ringColor,
                 startAngle = -90f,
-                sweepAngle = 360f * fraction,
+                sweepAngle = 360f * animatedFraction,
                 useCenter = false,
                 topLeft = outerTopLeft,
                 size = outerSize,
@@ -99,7 +108,7 @@ fun CalorieProgressRing(
                 drawArc(
                     color = activeColor,
                     startAngle = -90f,
-                    sweepAngle = 360f * activeFraction,
+                    sweepAngle = 360f * animatedActiveFraction,
                     useCenter = false,
                     topLeft = innerTopLeft,
                     size = innerSize,

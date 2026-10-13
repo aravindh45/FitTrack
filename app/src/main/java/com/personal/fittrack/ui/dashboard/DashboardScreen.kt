@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.animation.animateContentSize
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -98,7 +99,10 @@ fun DashboardScreen(viewModel: DashboardViewModel) {
         if (todayEntries.isEmpty()) {
             Text("Nothing logged yet today - tap the meal icon to add one.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.animateContentSize()
+            ) {
                 todayEntries.forEach { entry ->
                     MealLogCard(
                         entry = entry,

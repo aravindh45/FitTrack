@@ -1,5 +1,6 @@
 package com.personal.fittrack.ui.history
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -188,7 +189,7 @@ private fun DailyCard(
                 }
             }
 
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.animateContentSize()) {
                 summary.entries.forEach { entry ->
                     MealLogCard(
                         entry = entry,

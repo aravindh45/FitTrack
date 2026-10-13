@@ -3,4 +3,15 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/white</item>
     </style>
+
+    <!-- Shown instantly on cold start, before any Compose/Activity work has happened - just
+         the app icon's flame mark on the same blue as the launcher icon background, so the
+         transition from "tapping the icon" to "app is open" feels like one continuous motion
+         instead of a blank-white flash. MainActivity switches back to Theme.FitTrack right
+         after installSplashScreen() in onCreate. -->
+    <style name="Theme.FitTrack.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#4285F4</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="postSplashScreenTheme">@style/Theme.FitTrack</item>
+    </style>
 </resources>

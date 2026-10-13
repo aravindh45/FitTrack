@@ -1,26 +1,39 @@
 package com.personal.fittrack.ui.navigation
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +50,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -123,25 +138,18 @@ fun FitTrackNavHost(appContainer: AppContainer) {
                             }
                         }
                     },
-                    actions = {
-                        if (showBottomBar && currentRoute != Screen.Settings.route) {
-                            IconButton(onClick = { navigateTo(Screen.Settings.route) }) {
-                                Icon(Icons.Outlined.Settings, contentDescription = "Settings")
-                            }
-                        }
-                    },
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
                 )
             }
         },
         bottomBar = {
             if (showBottomBar) {
-                CenterFabBottomBar(
-                    isHomeSelected = currentRoute == Screen.Dashboard.route,
-                    isHistorySelected = currentRoute == Screen.History.route,
+                DockBottomBar(
+                    currentRoute = currentRoute,
                     onHomeClick = { navigateTo(Screen.Dashboard.route) },
                     onLogClick = { navController.navigate(Screen.LogFood.route) },
-                    onHistoryClick = { navigateTo(Screen.History.route) }
+                    onHistoryClick = { navigateTo(Screen.History.route) },
+                    onSettingsClick = { navigateTo(Screen.Settings.route) }
                 )
             }
         }
@@ -149,7 +157,13 @@ fun FitTrackNavHost(appContainer: AppContainer) {
         NavHost(
             navController = navController,
             startDestination = startDestination,
-            modifier = Modifier.padding(padding)
+            modifier = Modifier.padding(padding),
+            // Same soft cross-fade on every navigation, destination and back - cheap, consistent
+            // "the app is alive" touch rather than the default instant hard-cut between screens.
+            enterTransition = { fadeIn(tween(220)) },
+            exitTransition = { fadeOut(tween(150)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { fadeOut(tween(150)) }
         ) {
             composable(Screen.Onboarding.route) {
                 val vm: OnboardingViewModel = viewModel(factory = factory)
@@ -196,74 +210,119 @@ fun FitTrackNavHost(appContainer: AppContainer) {
 }
 
 /**
- * Custom bottom bar: Home and History flank a center-docked FAB for logging a meal - the
- * app's single most frequent action gets the most prominent, easiest-to-reach spot. Settings
- * moved to a top-bar icon instead of fighting the FAB for the middle slot.
+ * macOS-dock-inspired bottom nav: a compact, floating rounded pill instead of a full-width
+ * bar, icon-only (no labels - the glow + filled/outlined swap carries the "you are here"
+ * signal on its own, same as a dock doesn't caption its icons either). Settings lives here
+ * now too instead of a separate top-bar gear, since every other destination already gets a
+ * dock slot - one obvious way to navigate, not two.
  */
 @Composable
-private fun CenterFabBottomBar(
-    isHomeSelected: Boolean,
-    isHistorySelected: Boolean,
+private fun DockBottomBar(
+    currentRoute: String?,
     onHomeClick: () -> Unit,
     onLogClick: () -> Unit,
-    onHistoryClick: () -> Unit
+    onHistoryClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
-    Surface(tonalElevation = 3.dp, color = MaterialTheme.colorScheme.surfaceContainer) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(84.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 28.dp, vertical = 14.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Surface(
+            shape = RoundedCornerShape(30.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 6.dp,
+            shadowElevation = 10.dp,
+            modifier = Modifier.height(64.dp)
         ) {
-            BottomBarAction(
-                selectedIcon = Icons.Filled.Home,
-                unselectedIcon = Icons.Outlined.Home,
-                label = "Home",
-                selected = isHomeSelected,
-                onClick = onHomeClick,
-                modifier = Modifier.weight(1f)
-            )
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                FloatingActionButton(
-                    onClick = onLogClick,
-                    modifier = Modifier.size(56.dp)
-                ) {
-                    Icon(Icons.Filled.Restaurant, contentDescription = "Log a meal")
-                }
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                DockIcon(
+                    selectedIcon = Icons.Filled.Home,
+                    unselectedIcon = Icons.Outlined.Home,
+                    selected = currentRoute == Screen.Dashboard.route,
+                    contentDescription = "Home",
+                    onClick = onHomeClick
+                )
+                DockIcon(
+                    selectedIcon = Icons.Filled.Restaurant,
+                    unselectedIcon = Icons.Filled.Restaurant,
+                    selected = currentRoute == Screen.LogFood.route,
+                    contentDescription = "Log a meal",
+                    onClick = onLogClick
+                )
+                DockIcon(
+                    selectedIcon = Icons.Filled.History,
+                    unselectedIcon = Icons.Outlined.History,
+                    selected = currentRoute == Screen.History.route,
+                    contentDescription = "History",
+                    onClick = onHistoryClick
+                )
+                DockIcon(
+                    selectedIcon = Icons.Filled.Settings,
+                    unselectedIcon = Icons.Outlined.Settings,
+                    selected = currentRoute == Screen.Settings.route,
+                    contentDescription = "Settings",
+                    onClick = onSettingsClick
+                )
             }
-            BottomBarAction(
-                selectedIcon = Icons.Filled.History,
-                unselectedIcon = Icons.Outlined.History,
-                label = "History",
-                selected = isHistorySelected,
-                onClick = onHistoryClick,
-                modifier = Modifier.weight(1f)
-            )
         }
     }
 }
 
-/** Modern nav-icon convention (same one Gmail/YouTube/Google Fit use): outlined glyph when a
- * tab isn't active, filled glyph when it is - gives a clearer "you are here" signal than a
- * static icon ever could, for free. */
+/** One dock slot: a soft radial-gradient glow fades in behind the icon when it's the active
+ * destination, the glyph itself swaps outlined-to-filled and nudges up in scale with a bouncy
+ * spring - small motion cues that read as "alive" without being distracting. */
 @Composable
-private fun BottomBarAction(
+private fun DockIcon(
     selectedIcon: ImageVector,
     unselectedIcon: ImageVector,
-    label: String,
     selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    contentDescription: String,
+    onClick: () -> Unit
 ) {
-    val color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(if (selected) selectedIcon else unselectedIcon, contentDescription = label, tint = color)
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1f else 0.88f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "dockIconScale"
+    )
+    val tint by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        label = "dockIconTint"
+    )
+    val glowColor = MaterialTheme.colorScheme.primary
+
+    Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+        AnimatedVisibility(
+            visible = selected,
+            enter = fadeIn(tween(220)) + scaleIn(initialScale = 0.5f, animationSpec = tween(220)),
+            exit = fadeOut(tween(150)) + scaleOut(targetScale = 0.5f, animationSpec = tween(150))
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(glowColor.copy(alpha = 0.35f), glowColor.copy(alpha = 0f))
+                        ),
+                        shape = CircleShape
+                    )
+            )
         }
-        Text(label, style = MaterialTheme.typography.labelSmall, color = color)
+        IconButton(onClick = onClick, modifier = Modifier.scale(scale)) {
+            Icon(
+                imageVector = if (selected) selectedIcon else unselectedIcon,
+                contentDescription = contentDescription,
+                tint = tint,
+                modifier = Modifier.size(26.dp)
+            )
+        }
     }
 }
