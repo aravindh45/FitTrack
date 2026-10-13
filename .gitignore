@@ -1,0 +1,17 @@
+*.iml
+.gradle/
+local.properties
+.idea/
+.DS_Store
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+/app/release/
+/app/debug/
+
+# Secrets (never commit API keys even in sample form)
+*.keystore
+keystore.properties
