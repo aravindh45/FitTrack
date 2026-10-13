@@ -14,8 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.RestaurantMenu
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -124,7 +126,7 @@ fun FitTrackNavHost(appContainer: AppContainer) {
                     actions = {
                         if (showBottomBar && currentRoute != Screen.Settings.route) {
                             IconButton(onClick = { navigateTo(Screen.Settings.route) }) {
-                                Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                                Icon(Icons.Outlined.Settings, contentDescription = "Settings")
                             }
                         }
                     },
@@ -215,7 +217,8 @@ private fun CenterFabBottomBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomBarAction(
-                icon = Icons.Filled.Home,
+                selectedIcon = Icons.Filled.Home,
+                unselectedIcon = Icons.Outlined.Home,
                 label = "Home",
                 selected = isHomeSelected,
                 onClick = onHomeClick,
@@ -226,11 +229,12 @@ private fun CenterFabBottomBar(
                     onClick = onLogClick,
                     modifier = Modifier.size(56.dp)
                 ) {
-                    Icon(Icons.Filled.RestaurantMenu, contentDescription = "Log a meal")
+                    Icon(Icons.Filled.Restaurant, contentDescription = "Log a meal")
                 }
             }
             BottomBarAction(
-                icon = Icons.Filled.History,
+                selectedIcon = Icons.Filled.History,
+                unselectedIcon = Icons.Outlined.History,
                 label = "History",
                 selected = isHistorySelected,
                 onClick = onHistoryClick,
@@ -240,9 +244,13 @@ private fun CenterFabBottomBar(
     }
 }
 
+/** Modern nav-icon convention (same one Gmail/YouTube/Google Fit use): outlined glyph when a
+ * tab isn't active, filled glyph when it is - gives a clearer "you are here" signal than a
+ * static icon ever could, for free. */
 @Composable
 private fun BottomBarAction(
-    icon: ImageVector,
+    selectedIcon: ImageVector,
+    unselectedIcon: ImageVector,
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -254,7 +262,7 @@ private fun BottomBarAction(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         IconButton(onClick = onClick) {
-            Icon(icon, contentDescription = label, tint = color)
+            Icon(if (selected) selectedIcon else unselectedIcon, contentDescription = label, tint = color)
         }
         Text(label, style = MaterialTheme.typography.labelSmall, color = color)
     }

@@ -160,7 +160,7 @@ private fun DailyCard(
                 text = DateUtils.formatEpochDay(summary.dateEpochDay),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
             )
 

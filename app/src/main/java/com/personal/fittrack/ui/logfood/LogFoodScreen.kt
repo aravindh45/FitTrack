@@ -24,6 +24,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.personal.fittrack.ui.common.NutrientRow
@@ -34,6 +36,9 @@ import com.personal.fittrack.ui.theme.GoogleYellow
 
 @Composable
 fun LogFoodScreen(viewModel: LogFoodViewModel) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -62,7 +67,17 @@ fun LogFoodScreen(viewModel: LogFoodViewModel) {
             )
 
             Button(
-                onClick = viewModel::submit,
+                onClick = {
+                    // Clearing focus/hiding the keyboard here (not just on navigation) matters:
+                    // while the description field is still focused, the FIRST tap anywhere else
+                    // on screen - including the bottom nav's Home button - is consumed by Android
+                    // just dismissing the keyboard, not by the thing you tapped. Without this,
+                    // "Home doesn't respond" right after logging a meal, when it's really just
+                    // eating your first tap before a second one gets through.
+                    focusManager.clearFocus()
+                    keyboardController?.hide()
+                    viewModel.submit()
+                },
                 enabled = viewModel.uiState !is LogFoodUiState.Loading,
                 modifier = Modifier.fillMaxWidth()
             ) {
